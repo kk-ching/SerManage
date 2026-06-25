@@ -1,8 +1,14 @@
 import discord
 from discord.ext import commands
 from WakeUp import *
+import socket
 import os
 from dotenv import load_dotenv
+import time
+
+
+def timestamped_print(*args, **kwargs):
+    print(f"[{time.strftime('%H:%M:%S')}]", *args, **kwargs)
 
 load_dotenv()
 
@@ -24,6 +30,7 @@ if not mac_address or not ip_address or not subnet_broadcast:
 
 @bot.command()
 async def start(ctx):
+    timestamped_print(f"Received command to start the server from {ctx.author}.")
     if is_reachable(ip_address):
         await ctx.send("Server is already running desuwa")
         return
@@ -33,7 +40,20 @@ async def start(ctx):
     else:
         await ctx.send("Failed to wake up the server after multiple attempts.")
 
+def is_internet_available(target = "discord.com"):
+    try:
+        socket.create_connection((target, 80), timeout=5)
+        return True
+    except socket.error:
+        return False
 
-
-
-bot.run(token)
+if __name__ == "__main__":
+    timestamped_print("Startup Script triggered at: " + time.strftime("%Y-%m-%d %H:%M:%S"))
+    count = 0
+    while not is_internet_available():
+        count += 1
+        timestamped_print(f"Internet not available, retrying in 10 seconds... (count: {count})")
+        time.sleep(10)
+    
+    timestamped_print("Access to the internet is available. Starting the bot...")
+    bot.run(token)
