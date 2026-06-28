@@ -2,6 +2,7 @@ from time import sleep
 from wakeonlan import send_magic_packet
 import platform
 import subprocess
+from ping3 import ping
 
 def wake_up_server(mac_address, ip_address, broadcast_ip):
     try_count = 0
@@ -31,13 +32,10 @@ def wake_up_server(mac_address, ip_address, broadcast_ip):
         return False
 
 def is_reachable(ip_address):
-    p = platform.system().lower()
-    if p == 'windows':
-        command = ['ping', '-n', '1', '-w', '1000', ip_address]
-        result = subprocess.run(command, stdout=subprocess.PIPE, text=True)
-        return result.returncode == 0 and "ttl=" in result.stdout.lower()
-    else:
-        command = ['ping', '-c', '1', '-W', '1', ip_address]
-        result = subprocess.run(command, stdout=subprocess.DEVNULL, text=True)
-        return result.returncode == 0
+    try:
+        response = ping(ip_address, timeout=1)
+        
+        return isinstance(response, float)
+    except Exception as e:
+        return False
 
